@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <style>
+            h1 {
+                font-size: 40px; text-align:center; border-bottom: 1px solid black; 
+                margin:0; padding:20px;
+            }
+            h2 {
+                font-size: 30px; margin:0; padding:50px;
+            }
+            h3 { padding:10px; }
+            h4 { padding:10px; }
+            div { padding:10px; }
+            li { padding:10px; }
+        </style>
+    </head>
+    <body>
+        <h1>YBIGTA GAN Study - 2nd Week</h1>
+        <h2>Image to Image Translation</h2>
+        <ul>
+            <li>pix2pix</li>
+            <li>CycleGAN</li>
+        </ul>
+        <div id='pix'>
+            <h2>pix2pix</h2>
+            <p>논문 링크 : <a href='https://arxiv.org/abs/1611.07004'>Pix2Pix(Image-to-Image Translation with Conditional Adversarial Networks)</a></p>
+            <h3>Introduction</h3>
+            <div>
+                기존의 Image to Image Translation의 경우 pair로 된 데이터를 모아 CNN 을 기반으로 학습시키는 형태였다.
+            </div>
+            <img src='image3.png' width="20%">
+            <div>
+                하지만 CNN 기반의 모델은 위 식과 같이 모든 pixel의 error를 loss로 사용하게 되는데, 이 때 전체 픽셀의 관점에서의 loss를 줄이는 방향으로 
+                학습이 진행되기 때문에 아래 그림의 L1과 같이 blurry 한 이미지가 생성되는 결과를 가져온다.<p></p> 
+                이러한 문제를 해결하기 위해 본 논문에서는 L1 loss와 GAN loss를 동시에 사용하는 방법을 제안한다.
+            </div>            
+            <img src='image2.png' width="35%">
+            <div>pix2pix를 통해 아래 사진과 같이 흑백 -> 컬러, 낮 -> 밤, edge -> photo 등의 translation을 수행할 수 있다.</div>
+            <img src='image1.png' width="35%">
+            <h3>Method</h3>
+            <div>
+                기존의 GAN, DCGAN 에서는 Noise Distribution에서 Data Distribution을 뽑아내는 학습을 하게 된다.<p></p>
+                반면 pix2pix에서는 하나의 Image Domain으로부터 또 다른 Image Domain으로의 Mapping Function을 학습하는 구조이기 때문에 Conditional GAN을 사용한다.
+            </div>  
+            <img src='image4.png' width="20%">
+            <img src='image5.png' width="20%">
+            <div>
+                loss function 으로는 두 가지가 사용되는데, 첫 번째(왼쪽) loss로는 cGAN loss가 사용되며 두 번째(오른쪽) loss로는 기존 CNN기반 모델에서 사용되던 L1 loss가 사용된다. 
+            </div>
+            <h3>Network</h3>
+            <h4>- Generator with Skips</h4>
+            <div>
+                Image to Image Translation에서 어려운 점 중 하나는 고해상도의 input grid를 고해상도의 input grid로 mapping하는 것이다.<p></p>
+                기존의 연구들은 주로 encoder-decoder 구조를 사용했지만, 이러한 구조에서는 bottleneck layer로 인해 정보의 손실이 필연적으로 발생한다.<p></p>
+                이를 해결하기 위해 pix2pix에서는 skip-connection을 추가한 U-Net 구조를 Generator로 사용하였다.<p></p> 
+                이는 전체 layer 개수가 n이라고 할 때 모든 i번째 layer와 n-i번째 layer을 concatenate 형태로 연결한 구조이기 때문에, 이미지의 전체적인 맥락을 보존하는데 효과적이다.
+            </div>
+            <img src='image6.png' width="30%">
+            <img src='image7.png' width="30%">
+            <div>
+                Figure 3은 U-Net의 구조를 보여주며, Figure 5에서는 Encoder-Decoder 구조와 U-Net 구조의 성능 차이를 보여준다.
+            </div>
+            <h4>- Markovian discriminator(PatchGAN)</h4>
+            <div>
+                pix2pix 의 Discriminator에는 PatchGAN이 사용되었다. 기존 GAN에서의 Discriminator는 단일 이미지를 분류했지만, PatchGAN은 하나의 이미지에서 NxN개의 patch 단위로 real과 fake를 구분한다.<p></p>
+                실험 결과 N값을 작게 설정해도 전체 이미지를 한번에 보는 것 보다 더 좋은 결과가 나옴을 확인하였다.<p></p> 이는 더 작은 PatchGAN이 더 적은 parameter를 가지고, 더 빠르며, 더 큰 이미지에 적용할 때에도 이점이 있음을 의미한다. 
+            </div>
+            <img src='image8.png' width="50%">
+            <div>위 그림은 patch size 에 따른 결과를 보여준다. 논문에서는 70x70이 가장 좋은 결과가 나온다고 말한다.</div>
+            <h4>- 전체 모델 구조</h4>
+            <div>Generator와 Discriminator 모델 구조는 아래와 같다.</div>
+            <img src='image9.png' width="30%"><img src='image10.png' width="30%">
+            <h3>결론 및 요약</h3>
+            <div>
+                Image to Image Translation에서 photo-realistic을 추구하기 위해 conditional adversarial networks를 도입하였다.<p></p>
+                U-Net과 PatchGAN을 이용하여 성능을 최적화하였다.<p></p>
+                Training Data가 pair로 존재해야 한다.
+            </div>
+        </div>
+        <div id='cycle'>
+            <h2>CycleGAN</h2>
+            <p>논문 링크 : <a href='https://arxiv.org/abs/1703.10593'>Unpaired Image-to-Image Translation using Cycle-Consistent Adversarial Networks</a></p>
+            <h3>Introduction</h3>
+            <h4>- pix2pix의 한계점</h4>
+            <div>pix2pix에서는 training data가 pair로 존재해야 한다는 한계가 있다.<p></p> 이런 한계를 극복하기 위해 본 논문에서는 paired data없이 X라는 domain에서 얻은 이미지를 target domain Y로 바꾸는 CycleGAN을 제시한다.</div>
+            <h3>Method</h3>
+            <img src='image11.png' width="15%">
+            <div>CycleGAN의 구조를 단순화하면 위 그림과 같다. X와 Y는 서로 연결하고자 하는 서로 다른 domain의 image이며,<p></p> X에서 Y로 mapping하는 G function이 존재하며 그 결과를 Y의 Discriminator인 Dy를 통해 판별한다. 반대의 경우도 마찬가지이다.<p></p>
+            하지만 이런 방법의 경우 문제가 발생하는데, X에서 Y로 mapping 하는 경우 X의 성질을 유지하면서 style을 Y로 바꾸는 것이 아니라,<p></p> 단순히 domain Y의 image처럼 보이기만 하면 되기 때문에 본래 목적대로의 mapping이 이루어지지 않는다.</div>
+            <img src='image12.png' width="35%">
+            <div>위에서 언급한 문제를 해결하기 위해, 위 그림처럼 추가적인 loss를 사용한다. X에서 Y로의 단순 mapping이 아니라, Y에서 X로 다시 복구 가능할 수 있도록 제약조건을 추가하는 것이다.</div>
+            <h4>- Full Loss Function</h4>
+            <img src='image13.png' width="25%">
+            <div>CycleGAN 에서의 전체 Loss는 위 식과 같다. 각각의 loss를 하나씩 살펴보도록 하겠다.</div>
+            <h4>- Adversarial Loss</h4>
+            <img src='image16.png' width="25%">
+            <div>일반적인 GAN 에서의 Adversarial Loss는 주로 BCE Loss를 사용하지만, 본 논문에서는 Least Square Loss를 사용한다.<p></p>이렇게 학습을 진행했을 때 안정적인 학습이 가능하고, mode collapse나 vanishing gradient의 가능성을 줄여준다고 한다.<p></p>
+            Generator는 pix2pix에서의 U-Net 구조를 기반으로 ResNet 구조를 가져와 128x128 이하의 image에는 6개의 resblock을, 256x256 이상의 image에는 9개의 resblock을 사용하였다.<p></p>
+            Discriminator는 pix2pix의 70x70 PatchGAN을 사용하였다. 
+            </div>
+            <h4>- Cycle Consistency Loss</h4>
+            <img src='image15.png' width="25%">
+            <div>Cycle Consistency Loss는 위에서 언급한 Y에서 X로 복구 가능하기 위한 제약조건으로의 Loss이다. paired data의 경우 X와 Y의 좌표값을 통해 그 관계에 대한 정보를 얻을 수 있지만,<p></p>
+                 unpaired dataset의 경우 그 정보가 없기 때문에 만들어진 image가 실제와 pair 관계라고 확정할 수 없기 때문에 한 방향의 mapping이 아닌 돌아오는 mapping까지 고려하는 것이다.</div>
+            <img src='image17.png' width="25%">
+            <div>위 그림처럼 Input X와 Reconstruction F(G(X))의 차이를 줄이는 것이 목적이다.</div>
+            <h4>- Identity Loss</h4>
+            <img src='image19.png' width="35%">    
+            <div>본 논문의 저자들은 추가적으로 사진<->그림 변환 등의 task에서 identity loss를 제안한다. X에서 Y로 가는 mapping 이외에도 Y에서 Y로 가는 mapping또한 제약을 걸어주는 것이다.<p></p>
+                그 결과로 아래의 사진처럼 분위기나 색상을 잘 유지할 수 있게 해주는 역할을 한다.</div>
+            <img src='image18.png' width="25%">
+            <h3>CycleGAN의 한계</h3>
+            <img src='image20.png' width="35%">
+            <div>CycleGAN은 분위기나 색상을 바꾸는 것으로 스타일을 학습하기 때문에 피사체의 모양 자체는 바꿀 수 없다는 한계가 존재한다.</div>
+        </div>
+    </body>
+</html>
